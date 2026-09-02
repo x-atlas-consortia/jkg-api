@@ -67,16 +67,18 @@ class Neo4jConnectionHelper(object):
         self.driver = neo4j.GraphDatabase.driver(server, auth=(username, password))
         if instance is None:
             instance = self
-        # Mar 2025
+
         if timeout < 0:
             logger.info(f'The timeout in the app.cfg ({timeout}) is negative. Setting to 0.')
             timeout = 0
         self._timeout = timeout
         self._payloadlimit = payloadlimit
         info = self._get_version()
+
         # The default database name should always be neo4j. The SHOW databases command is administrative, and cannot
         # be called from the driver via apoc.cypher.run(). Hard code the value.
         self._database_name = 'neo4j'
+
         self._database_version = info.get('version')
         self._database_edition = info.get('edition')
 
