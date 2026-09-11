@@ -170,3 +170,39 @@ def codes_code_id_concepts_get_logic(neo4j_instance, code_id: str) -> List[dict]
         return result
     else:
         return result[0]
+
+def codes_code_id_terms_get_logic(neo4j_instance,code_id: str, term_type: list[str] | None = None) -> List[dict]:
+    """
+    Obtains information on terms that link to a code.
+
+    :param neo4j_instance: neo4j connection
+    :param code_id: a UBKG Code in format SAB:CodeId
+    :param term_type: an optional list of acronyms for a code type
+
+    # Assumption: the parameters code_id and term_type were validated by the controller.
+    """
+    result: list[dict] = []
+
+    # Load query template.
+    querytxt = loadquerystring('codes_terms.cypher')
+
+    # BUILD QUERY PARAMS
+    params: dict = {"code": code_id, "term_type": term_type}
+
+    # Instantiate the query with the configured timeout.
+    query = neo4j.Query(text=querytxt, timeout=neo4j_instance.timeout)
+
+    with neo4j_instance.driver.session() as session:
+        try:
+            # Execute the query with neo4j params
+            recds: neo4j.Result = session.run(query, **params)
+
+            for record in recds:
+                result.append(record.get('terms'))
+
+        except neo4j.exceptions.ClientError as e:
+            # If the error is from a timeout, raise a HTTP 408.
+            if e.code == 'Neo.ClientError.Transaction.TransactionTimedOutClientConfiguration':
+                raise GatewayTimeout
+
+    return result
