@@ -12,7 +12,7 @@ servers:
     description: Base context instance
 tags:
   - name: codes
-    description: endpoints about codes from a SAB
+    description: Endpoints about codes from a SAB. In JKG, a code corresponds to the codeid property of a CODE rel that links a Concept node to a Term node.
   - name: concepts
     description: endpoints about concepts
   - name: concepts/paths
@@ -32,20 +32,20 @@ tags:
 paths:
   /codes/{code_id}/codes:
     get:
-      summary:  Returns information on Code nodes that link to the Concept nodes to which the specified code links (i.e., related codes), subject to constraints specified in parameters. [A Concept node in the UBKG can have CODE relationships with (links to) Code nodes from multiple sources (SABs). For example, the Code nodes with code_ids SNOMEDCT_US:254837009, NCI:C9335 and MSH:D001943 link to the Concept with identifier C0006142.]
+      summary:  Returns information on CODE rels that connect Concept nodes to Term nodes.
       operationId: codes_code_id_codes_get
       parameters:
         - name: code_id
           in: path
           required: true
-          description: the identifier for a Code node, in format _SAB_:_code_ where _SAB_ is an identifier for the source of the code.
+          description: corresponds to the codeid property of a CODE rel, in format _SAB_:_code_ where _SAB_ is an identifier for the source of the code.
           schema:
             type: string
             example: SNOMEDCT_US:254837009
         - name: sab
           in: query
           required: false
-          description: The set of sources (SABs) to which to limit the set of Codes that  link to the same Concept to which the Code with CodeID=_code_id_ links. This set can be specified either a list of values separated by commas (e.g., ?sab=SAB1,SAB,SAB3) or with individual key-value pairs (e.g., ?sab=SAB1&sab=SAB2&SAB=SAB3).
+          description: The set of sources (SABs) to which to limit the set of Codes that link to the same Concept to which the Code with CodeID=_code_id_ links. This set can be specified either a list of values separated by commas (e.g., ?sab=SAB1,SAB,SAB3) or with individual key-value pairs (e.g., ?sab=SAB1&sab=SAB2&SAB=SAB3).
           schema:
             type: array
             uniqueItems: true
@@ -55,7 +55,7 @@ paths:
             default: []
       responses:
         '200':
-          description: An array of objects corresponding to Code nodes that share links to the Concept associated with the specified Code, subject to constraints specified in parameters.
+          description: An array of objects corresponding to CODE rels that connect Concept nodes with Term nodes.
           content:
             application/json:
               schema:
@@ -1281,15 +1281,15 @@ paths:
 components:
   schemas:
     CodesCodesObj: # Schema name
-      description: Code nodes that link to the same Concept node to which a specified Code links.
+      description: CODE rels that connect Concept nodes to Term nodes, with the rel's codeid property corresponding to a specified code in a SAB.
       type: object
       properties:
         concept:
-          description: The CUI (Concept Unique Identifier) for the shared Concept node.
+          description: The identifier for the Concept node. Corresponds to the Concept Unique Identifier (CUI) for UMLS concepts.
           type: string
           example: C0006142
         code:
-          description: CodeID of a Code node, in format _SAB_:_CODE_
+          description: codeid of a CODE rel, in format _SAB_:_CODE_
           type: string
           example: CCS 2.5
         SAB:
@@ -1297,15 +1297,15 @@ components:
           type: string
           example: CCF
     CodeTerms: # Schema name
-      description: Term nodes that link to the specified Code.
+      description: Term nodes that link to a Concept node via CODE rels with a specified codeid property.
       type: object
       properties:
         code:
-          description: the Code to which Terms link
+          description: the codeid property of the CODE rel that connects the Term node to a Concept node
           type: string
           example: SNOMEDCT_US:254837009
         terms:
-          description: terms linked to the code, subject to parameters
+          description: identifiers for Term nodes linked to a Concept via CODE rels with specified codeid properties
           type: array
           items:
             type: object
