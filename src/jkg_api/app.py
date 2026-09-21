@@ -14,6 +14,7 @@ from utils.neo4j_connection_helper import Neo4jConnectionHelper
 # Route Blueprints
 from routes.status.status import status_blueprint
 from routes.codes.codes import codes_blueprint
+from routes.concepts.concepts import concepts_blueprint
 
 from utils.http_error_string import wrap_message
 
@@ -49,6 +50,7 @@ class JkgAPI:
         # Register Blueprints
         self.app.register_blueprint(status_blueprint)
         self.app.register_blueprint(codes_blueprint)
+        self.app.register_blueprint(concepts_blueprint)
 
         self.app.neo4jConnectionHelper = None
 

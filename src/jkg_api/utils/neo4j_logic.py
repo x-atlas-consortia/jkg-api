@@ -206,3 +206,51 @@ def codes_code_id_terms_get_logic(neo4j_instance,code_id: str, term_type: list[s
                 raise GatewayTimeout
 
     return result
+
+#--------------------
+# concepts ENDPOINT ROUTINES
+# -------------------
+
+def concepts_concept_id_codes_get_logic(neo4j_instance, concept_id: str, sab: List[str]) -> List[str]:
+    """
+    Returns information on the codes that link to the specified Concept node via
+    CODE rels.
+
+    :param neo4j_instance: neo4j connection
+    :param concept_id: a Concept Unique Identifier (CUI)
+    :param sab: a list of SAB codes by which to filter codes in response
+
+    # Assumption: the parameter sab was validated by the controller.
+    """
+
+    result: list[str] = []
+
+    # Load query template.
+    querytxt: str = loadquerystring(filename='concepts_codes.cypher')
+
+    # BUILD QUERY PARAMS
+
+    # Required filter on code_id.
+    params: dict = {"concept_id": concept_id, "sablist": sab}
+
+    print(querytxt)
+    print(params)
+
+    # Instantiate the query with the configured timeout.
+    query = neo4j.Query(text=querytxt, timeout=neo4j_instance.timeout)
+
+    with neo4j_instance.driver.session() as session:
+        try:
+
+            # Execute the query with neo4j params
+            recds: neo4j.Result = session.run(query, **params)
+            for record in recds:
+                result.append(record.get('code'))
+
+        except neo4j.exceptions.ClientError as e:
+            # If the error is from a timeout, raise a HTTP 408
+            if e.code == 'Neo.ClientError.Transaction.TransactionTimedOutClientConfiguration':
+                raise GatewayTimeout
+
+    return result
+
