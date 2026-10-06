@@ -3,7 +3,7 @@ from flask import Blueprint, current_app, request, make_response
 
 
 # Cypher query functions
-from utils.neo4j_logic import concepts_concept_id_codes_get_logic
+from utils.neo4j_logic import concepts_concept_id_codes_get_logic, concepts_concept_id_concepts_get_logic
 # Functions to validate query parameters
 from utils.http_error_string import get_404_error_string, validate_query_parameter_names, \
     validate_parameter_value_in_enum, validate_required_parameters, validate_parameter_is_numeric, \

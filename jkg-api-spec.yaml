@@ -164,7 +164,7 @@ paths:
           description: The identifier for the Concept (also known as the Concept Unique Identifier, or CUI)
           schema:
             type: string
-            example: C0678222
+            example: UMLS:C0678222
         - name: sab
           in: query
           required: false
@@ -210,7 +210,7 @@ paths:
           description: The concept identifier (also known as Concept Unique Identifier, or CUI)
           schema:
             type: string
-            example: C4722518
+            example: UMLS:C4722518
       responses:
         '200':
           description: An array of information on Concepts that have relationships with the specified Concept
@@ -245,7 +245,7 @@ paths:
           required: true
           schema:
             type: string
-            example: C0006142
+            example: UMLS:C0006142
       responses:
         '200':
           description: An array of Definitions associated with the Concept.
