@@ -287,3 +287,40 @@ def concepts_concept_id_concepts_get_logic(neo4j_instance, concept_id: str) -> L
                 raise GatewayTimeout
 
     return result
+
+def concepts_concept_id_definitions_get_logic(neo4j_instance, concept_id: str) -> List[dict]:
+    """
+    Returns information on the Definition nodes that link to the specified Concept node.
+    :param neo4j_instance: neo4j connection
+    :param concept_id: a Concept Unique Identifier (CUI)
+
+    """
+
+    result: list[dict] = []
+
+    # Load Cypher query template from file.
+    querytxt: str = loadquerystring(filename='concepts_definitions.cypher')
+
+    # BUILD QUERY PARAMS
+
+    # Required filter on concept_id.
+    params: dict = {"concept_id": concept_id}
+
+    # Instantiate the query with the configured timeout.
+    query = neo4j.Query(text=querytxt, timeout=neo4j_instance.timeout)
+
+    with neo4j_instance.driver.session() as session:
+        try:
+
+            # Execute the query with neo4j params
+            recds: neo4j.Result = session.run(query, **params)
+
+            for record in recds:
+                result.append(record.get('definitions'))
+
+        except neo4j.exceptions.ClientError as e:
+            # If the error is from a timeout, raise a HTTP 408
+            if e.code == 'Neo.ClientError.Transaction.TransactionTimedOutClientConfiguration':
+                raise GatewayTimeout
+
+    return result[0]
