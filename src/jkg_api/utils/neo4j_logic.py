@@ -324,3 +324,71 @@ def concepts_concept_id_definitions_get_logic(neo4j_instance, concept_id: str) -
                 raise GatewayTimeout
 
     return result[0]
+
+def concepts_concept_id_labels_get_logic(neo4j_instance, concept_id:str) -> List[dict]:
+    """
+    Returns information on the semantic types associated with a concept.
+    In JKG, semantic types are the alternate labels for a Concept node.
+    :param  :param neo4j_instance: neo4j connection
+    :param concept_id: a concept identifier, including Concept Unique Identifier (CUI)
+    :return:
+    """
+
+    result: list[str] = []
+
+    # First, obtain the list of labels.
+    # Load Cypher query template from file.
+    querytxt: str = loadquerystring(filename='concepts_labels.cypher')
+
+    # Required filter on concept_id.
+    params: dict = {"concept_id": concept_id}
+
+    # Instantiate the query with the configured timeout.
+    query = neo4j.Query(text=querytxt, timeout=neo4j_instance.timeout)
+
+    with neo4j_instance.driver.session() as session:
+        try:
+
+            # Execute the query with neo4j params
+            recds: neo4j.Result = session.run(query, **params)
+
+            for record in recds:
+                result.append(record.get('concept_labels'))
+
+        except neo4j.exceptions.ClientError as e:
+            # If the error is from a timeout, raise a HTTP 408
+            if e.code == 'Neo.ClientError.Transaction.TransactionTimedOutClientConfiguration':
+                raise GatewayTimeout
+
+    if len(result) == 0:
+        return result
+    else:
+        return result[0]
+
+def label_semantic_type_get_logic(neo4j_instance, node_label:str) -> dict:
+    """
+    Returns information on the Node_Label node identified by the specified id.
+    :param neo4j_instance:
+    :param node_label: a Node_Label string
+    :return: details on a Semantic Type node with node_label property = node_label.
+    """
+
+    result = []
+    querytxt: str = loadquerystring(filename='node_labels.cypher')
+    params: dict = {"label_id": node_label}
+
+    # Instantiate the query with the configured timeout.
+    query = neo4j.Query(text=querytxt, timeout=neo4j_instance.timeout)
+
+    with neo4j_instance.driver.session() as session:
+        try:
+            # Execute the query with neo4j params
+            recds: neo4j.Result = session.run(query, **params)
+            for record in recds:
+                result.append(record.get('semantic_type'))
+
+        except neo4j.exceptions.ClientError as e:
+            # If the error is from a timeout, raise a HTTP 408
+            if e.code == 'Neo.ClientError.Transaction.TransactionTimedOutClientConfiguration':
+                raise GatewayTimeout
+    return result[0]

@@ -269,25 +269,25 @@ paths:
           description: Unknown error
       tags:
         - concepts
-  /concepts/{concept_id}/nodeobjects:
+  /concepts/{concept_id}/semantic_types:
     get:
-      operationId: concepts_identifier_nodes_get
-      summary: Returns a set of "Concept Node objects" (or "concept subgraphs") that "match" the identifier (concept_id). A concept node in the UBKG is the origin of a "concept subgraph" that links a Concept node to a set of Code, Term, Definition, and Semantic Type nodes. A "Concept Node object" represents this subgraph as a set of Concept properties--i.e., all of the Concept's linked Codes, terms, definitions, and semantic types. A "match" is an exact match between an identifier and a text-based property in a Concept Node object. Because an identifier may match properties in more than one Concept Node object, the endpoint can return multiple Concept Node objects.
+      operationId: concepts_identifier_semantic_types_get
+      summary: Returns a set of semantic types for the concept with identifier (concept_id).
       parameters:
         - name: concept_id
           in: path
           required: true
-          description: The string to match against properties related to Concepts. Related properties include the preferred term for the Concept; the CUI for the Concept; the CodeID for a Code linked to the Concept; and terms for a Code linked to a Concept.
+          description: The identifier for a concept
           schema:
             type: string
-            example: Cells
+            example: UMLS:C3971254
       responses:
         '200':
-          description: The set of Concept node objects that match the identifier.
+          description: The set of Semantic Type objects that match the identifier.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConceptNodes'
+                $ref: '#/components/schemas/ConceptSemanticType'
         '303':
           description: The response size exceeds a limit set by the server. The response content is stored in a file in a AWS S3 bucket. The returned response includes a URL that can be used to download the stored file.
         '400':
@@ -1626,91 +1626,6 @@ components:
                     type: string
                     description: the Type Unique Identifier (TUI) for the Semantic Type node
                     example: T018
-    ConceptNodes: # Schema name
-      type: object
-      description: A set of "Concept node" objects that translate and consolidate information about Concept nodes in the UBKG. A Concept node in the UBKG is the origin of a subgraph that links a Concept node to a set of Code, Term, Definition, and Semantic Type nodes. A Concept node object represents a concept subgraph.
-      properties:
-        nodeobjects:
-          type: array
-          description: Array of concept node objects. Each concept node object represents a Concept node as the origin of a subgraph of linked Code, Term, Definition, and Semantic Type nodes.
-          items:
-            type: object
-            properties:
-               concept:
-                type: object
-                properties:
-                  cui:
-                    type: string
-                    description: the identifier for the Concept node that is the origin of a concept node, or concept subgraph
-                    example: C0007634
-                  pref_term:
-                    type: string
-                    description: the preferred term for the Concept node, corresponding to a Term node that links to (has PREF_TERM relationship with) the Concept node.
-                    example: Cells
-                  codes:
-                    type: array
-                    description: Array of Code objects. Each Code object represents a Code node that links to (has CODE relationship with) the Concept node and its associated Terms.
-                    items:
-                      type: object
-                      properties:
-                        codeid:
-                          type: string
-                          description: the CodeID for the Code node, in format _SAB_:_CODE_
-                          example: "CL:0000000"
-                        sab:
-                          type: string
-                          description: the identifier for the source (SAB) that defined the code
-                          example: CL
-                        terms:
-                          type: array
-                          description: Array of Term nodes that link to the Code node.
-                          items:
-                            type: object
-                            properties:
-                              name:
-                                type: string
-                                description: Term string
-                                example: cell
-                              tty:
-                                type: string
-                                description: term type--i.e., the type of relationship between the Term node and the Code node.
-                                example: PT_PATO
-                  definitions:
-                    type: array
-                    description: Array of Definition objects. Each Definition object represents a Definition node that links to (has DEF relationship with) the Concept node. (If a SAB assigns a definition to a code, the UBKG represents the definition as a Definition node linked to the Concept node to which the Code node links.)
-                    items:
-                      type: object
-                      properties:
-                        def:
-                          type: string
-                          description: the definition string
-                          example: A material entity of anatomical origin....
-                        sab:
-                          type: string
-                          description: the identifier for the source (SAB) that provided the definition
-                          example: CL
-                  semantic_types:
-                    type: array
-                    description: Array of Semantic Type objects. Each Semantic Type object represents a Semantic Type node that links to (has STY relationship with) the Concept node.
-                    items:
-                      type: object
-                      properties:
-                        def:
-                          type: string
-                          description: the definition of the semantic type
-                          example: The fundamental structural and functional unit of living organisms.
-                        stn:
-                          type: string
-                          description: the Semantic Type's identifier in the Semantic Type Network
-                          example: A1.2.1
-                        sty:
-                          type: string
-                          description: the Semantic Type name
-                          example: Embryonic Structure
-                        tui:
-                          type: string
-                          description: the Type Unique Identifier (TUI) for the Semantic Type node
-                          example: T018
     DatabaseInfo: # Schema name
       type: object
       description: basic information on the neo4j database server instance
@@ -1919,6 +1834,35 @@ components:
             type: string
             description: a Concept Unique Identifier (CUI)
             example: C0794811
+    ConceptSemanticType:
+      type: object
+      description: semantic types for a concept
+      properties:
+        concept_id:
+          type: string
+          description: identifier for a concept
+          example: UMLS:C3971254
+        semantic_types:
+          type: array
+          items:
+            type: object
+            description: semantic type
+            properties:
+              definition:
+                type: string
+                description: definition of the semantic type
+              id:
+                type: string
+                description: identifier for the semantic type
+                example: An organism having cellulose cell walls...
+              node_label:
+                type: string
+                description: label for the Node_Label node associated with the semantic type
+                example: Plant
+              sab:
+                type: string
+                description: vocabulary for the semantic type
+                example: UMLS
     Source: #Schema name
       type: object
       description: An array of information on the sources that can be imported into a UBKG context.

@@ -3,7 +3,11 @@ from flask import Blueprint, current_app, request, make_response
 
 
 # Cypher query functions
-from utils.neo4j_logic import concepts_concept_id_codes_get_logic, concepts_concept_id_concepts_get_logic, concepts_concept_id_definitions_get_logic
+from utils.neo4j_logic import (concepts_concept_id_codes_get_logic, \
+    concepts_concept_id_concepts_get_logic, \
+    concepts_concept_id_definitions_get_logic, \
+    concepts_concept_id_labels_get_logic, \
+    label_semantic_type_get_logic)
 # Functions to validate query parameters
 from utils.http_error_string import get_404_error_string, validate_query_parameter_names, \
     validate_parameter_value_in_enum, validate_required_parameters, validate_parameter_is_numeric, \
@@ -420,6 +424,36 @@ def concepts_subgraph_get():
     # Serialize the graph object response as JSON.
     result = PathJSONSerializer(result).json
     return redirect_if_large(resp=result)
+
+@concepts_blueprint.route('<concept_id>/semantic_types', methods=['GET'])
+def concepts_semantic_types_get(concept_id):
+    """
+    Returns the semantic types associated with a concept.
+    Semantic types are Node_Label objects with ids that correspond to the
+    labels of a Concept node.
+    :param concept_id: identifier for a concept node.
+    :return:
+    """
+
+    neo4j_instance = current_app.neo4jConnectionHelper.instance()
+
+    labels = concepts_concept_id_labels_get_logic(neo4j_instance, concept_id=concept_id)
+
+    iserr = labels is None or labels == []
+    if iserr:
+        # Empty result
+        err = get_404_error_string(prompt_string=f"No semantic types for concepts with identifier",
+                                   custom_request_path=f"'identifier' = '{concept_id}'",
+                                   timeout=neo4j_instance.timeout)
+        return make_response(err, 404)
+
+    result = []
+    for l in labels:
+        if l != 'Concept':
+            semantic_type = label_semantic_type_get_logic(neo4j_instance, node_label=l)
+            result.append(semantic_type)
+
+    return redirect_if_large(resp={"concept_id":concept_id,"semantic_types": result})
 
 @concepts_blueprint.route('<search>/nodeobjects', methods=['GET'])
 def concepts_concept_identifier_nodes_get(search):
