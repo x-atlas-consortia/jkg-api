@@ -1,4 +1,5 @@
 // used by concepts/<concept_id>/semantic_types endpoint
+//
 
 WITH $concept_id AS concept_id
 MATCH (c:Concept{id:concept_id})
